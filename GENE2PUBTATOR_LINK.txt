@@ -1,0 +1,3 @@
+https://ftp.ncbi.nlm.nih.gov/pub/lu/PubTatorCentral/gene2pubtatorcentral.gz
+
+Download and unzip in the project maiN folder
