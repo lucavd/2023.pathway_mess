@@ -1,20 +1,21 @@
-library(RISmed)
-library(tidyverse)
-library(ReactomePA)
-library(org.Hs.eg.db)
+library(xml2)
+mesh <- read_xml(here::here("data/MeSH/desc2023.xml"))
 
+mesh <- XML::xmlToDataFrame(here::here("data/MeSH/desc2023.xml"))
 
-#install.packages("BiocManager")
-# BiocManager::install('DOSE')
-# BiocManager::install('ReactomePA', force = T)
-# BiocManager::install("org.Hs.eg.db")
-# BiocManager::install("ReactomePA")
+terms <- mesh$DescriptorName
+
+paste0(terms[1])
+
+query_string <- paste0('("', terms[1], '"[Mesh]) AND ("2018/01/01"[Date - Entrez] : "2018/12/31"[Date - Entrez])')
+
 
 # no more of 3 requests per second or during weekends or nights (see RISmed help)
 
 search_topic <- '("Amyotrophic Lateral Sclerosis"[Mesh]) AND ("2018/01/01"[Date - Entrez] : "2018/12/31"[Date - Entrez])'
 
-search_query <- EUtilsSummary(search_topic, retmax = 10000)
+search_query2 <- EUtilsSummary(search_topic, retmax = 10000)
+search_query <- EUtilsSummary(query_string, retmax = 10000)
 
 summary(search_query) # check if more than 10000
 
@@ -50,6 +51,6 @@ path <- tibble('Pathway' = Reactome_res.ALS@result[["Description"]],
                'q_value' = Reactome_res.ALS@result[["qvalue"]])
 
 path$coviddi <- str_detect(path$Pathway, regex("COVID|coronavirus|SARS-CoV-2|COVID-19", 
-                                           ignore_case = TRUE))
+                                               ignore_case = TRUE))
 
 sum(path$coviddi)
