@@ -12,6 +12,8 @@ library(org.Hs.eg.db)
 
 mesh <- XML::xmlToDataFrame(here::here("data/MeSH/desc2023.xml"))
 
+diseases = mesh |> filter(stringr::str_detect(TreeNumberList, stringr::regex("C", ignore_case = TRUE)))
+
 terms <- mesh$DescriptorName
 
 terms_100 <- sample(terms, size = 100, replace = FALSE)
