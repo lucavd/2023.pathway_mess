@@ -14,8 +14,8 @@ query_string <- paste0('("', terms[1], '"[Mesh]) AND ("2018/01/01"[Date - Entrez
 
 search_topic <- '("Amyotrophic Lateral Sclerosis"[Mesh]) AND ("2018/01/01"[Date - Entrez] : "2018/12/31"[Date - Entrez])'
 
-search_query2 <- EUtilsSummary(search_topic, retmax = 10000)
-search_query <- EUtilsSummary(query_string, retmax = 10000)
+search_query <- EUtilsSummary(search_topic, retmax = 10000)
+#search_query <- EUtilsSummary(query_string, retmax = 10000)
 
 summary(search_query) # check if more than 10000
 
