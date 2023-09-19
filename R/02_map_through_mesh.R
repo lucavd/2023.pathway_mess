@@ -12,9 +12,10 @@ library(org.Hs.eg.db)
 
 mesh <- XML::xmlToDataFrame(here::here("data/MeSH/desc2023.xml"))
 
-diseases = mesh |> filter(stringr::str_detect(TreeNumberList, stringr::regex("C", ignore_case = TRUE)))
+ #diseases has the tree code C
+diseases <- mesh |> filter(stringr::str_detect(TreeNumberList, stringr::regex("C", ignore_case = TRUE)))
 
-terms <- mesh$DescriptorName
+terms <- diseases$DescriptorName
 
 terms_100 <- sample(terms, size = 100, replace = FALSE)
 
@@ -77,4 +78,4 @@ pathways <- map(genes, get_pathways, .progress = "progress")
 
 names(pathways) <- terms_100
 
-pathways_df <- dplyr::tibble('term' = terms_100, 'somma' = purrr::flatten_dbl(pathways))
+pathways_df3 <- dplyr::tibble('term' = terms_100, 'somma' = purrr::flatten_dbl(pathways))
