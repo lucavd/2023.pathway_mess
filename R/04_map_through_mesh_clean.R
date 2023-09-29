@@ -5,10 +5,10 @@ library(ReactomePA)
 library(org.Hs.eg.db)
 
 # Read data
-mesh <- XML::xmlToDataFrame(here::here("data/MeSH/desc2023.xml"))
+mesh <- XML::xmlToDataFrame("C:/Users/SaraAhsani-Nasab/OneDrive - Unit of Biostatistics Epidemiology and Public Health/PEA/MeSH/desc2023.xml")
 diseases <- mesh |> filter(stringr::str_detect(TreeNumberList, stringr::regex("C", ignore_case = TRUE)))
 terms <- diseases$DescriptorName
-pubtator <- read.delim(file = here::here("data/Pubtator/gene2pubtatorcentral"),
+pubtator <- read.delim(("C:/Users/SaraAhsani-Nasab/OneDrive - Unit of Biostatistics Epidemiology and Public Health/PEA/Pubtator/gene2pubtatorcentral.gz"),
                        quote = "", header = TRUE,
                        col.names = c('PMID', 'Object', 'Gene', 'Gene_name', 
                                      'Dataset'))
