@@ -33,7 +33,7 @@ filtered_data <- pubmed_data %>%
   )
 
 # could be run once at the beginning
-pubtator <- read.delim(file = here::here("data/Pubtator/gene2pubtatorcentral"),
+pubtator <- read.delim(("C:/Users/SaraAhsani-Nasab/OneDrive - Unit of Biostatistics Epidemiology and Public Health/PEA/Pubtator/gene2pubtatorcentral"),
                        quote = "", header = TRUE,
                        col.names = c('PMID', 'Object', 'Gene', 'Gene_name', 
                                      'Dataset'))
