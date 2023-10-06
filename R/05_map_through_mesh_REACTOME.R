@@ -41,7 +41,8 @@ query_to_pathwaysREAC <- function(x) {
     
     path <- dplyr::tibble('Pathway' = Reactome_res.ALS@result[["Description"]],
                           'q_value' = Reactome_res.ALS@result[["qvalue"]]) %>% 
-      dplyr::filter(q_value < 0.01)
+      dplyr::filter(q_value < 0.01) %>% 
+      rowid_to_column(var = "rowid")
     
     path$coviddi <- stringr::str_detect(path$Pathway, 
                                         stringr::regex("COVID|coronavirus|SARS-CoV-2|COVID-19", 
@@ -49,6 +50,7 @@ query_to_pathwaysREAC <- function(x) {
     
     somma <- sum(path$coviddi, na.rm = TRUE)
     matched_pathways <- path$Pathway[path$coviddi]
+    pathway_sig <- path[path$Pathway %in% matched_pathways, ]
     
   }, error = function(e) {
     warning(paste("An error occurred for the term", x, ": ", e))

@@ -41,7 +41,8 @@ query_to_pathwaysWP <- function(x) {
     
     path <- dplyr::tibble('Pathway' = WP_res@result[["Description"]],
                           'q_value' = WP_res@result[["qvalue"]]) %>% 
-      dplyr::filter(q_value < 0.01)
+      dplyr::filter(q_value < 0.01) %>% 
+      rowid_to_column(var = "rowid")
     
     path$coviddi <- stringr::str_detect(path$Pathway, 
                                         stringr::regex("COVID|coronavirus|SARS-CoV-2|COVID-19", 
@@ -49,6 +50,7 @@ query_to_pathwaysWP <- function(x) {
     
     somma <- sum(path$coviddi, na.rm = TRUE)
     matched_pathways <- path$Pathway[path$coviddi]
+    pathway_sig <- path[path$Pathway %in% matched_pathways, ]
     
   }, error = function(e) {
     warning(paste("An error occurred for the term", x, ": ", e))
