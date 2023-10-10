@@ -117,7 +117,7 @@ if (length(overlap_13) > 0) {
 }
 
 
-overlap_13 <- intersect(row1_values, row3_values)
+overlap_23 <- intersect(row2_values, row3_values)
 
 if (length(overlap_23) > 0) {
   cat("Overlap between rows", 2, "and", 3, "occurs at values:", overlap_23, "\n")
