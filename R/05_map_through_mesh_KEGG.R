@@ -40,8 +40,11 @@ query_to_pathwaysKEGG <- function(x) {
                            pvalueCutoff = 0.01, pAdjustMethod = "BH", qvalueCutoff = 0.01,
                            use_internal_data = FALSE)
     
-    path <- dplyr::tibble('Pathway' = KEGG_res@result[["Description"]],
-                          'q_value' = KEGG_res@result[["qvalue"]]) %>% 
+    path <- dplyr::tibble('PathwayID' = KEGG_res@result[["ID"]],
+                          'Pathway' = KEGG_res@result[["Description"]],
+                          'q_value' = KEGG_res@result[["qvalue"]],
+                          'geneCOUNT' = KEGG_res@result[["Count"]],
+                          'geneID' = KEGG_res@result[["geneID"]]) %>% 
       dplyr::filter(q_value < 0.01) %>% 
       rowid_to_column(var = "rowid")
     
