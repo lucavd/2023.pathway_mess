@@ -94,3 +94,33 @@ final_results_dfKEGG$sum <- map_chr(final_results_dfKEGG$sum, ~ {
 write.csv(final_results_dfKEGG, "final_results_dfKEGG.csv")
 
 save(final_results_dfKEGG, file = 'final_resutsKEGG.rda')
+
+
+# Overlaps ----------------------------------------------------------------
+
+## convert path$geneID to a numeric variable
+split_strings <- strsplit(path$geneID, "/")
+numeric_list <- lapply(split_strings, function(x) as.numeric(x))
+path$geneID <- sapply(numeric_list, function(x) x)
+
+## overlaps of genes among pathways (3 most significant/higher q-value)
+row1_values <- path$geneID[[1]]
+row2_values <- path$geneID[[2]]
+row3_values <- path$geneID[[3]]
+
+overlap_13 <- intersect(row1_values, row3_values)
+
+if (length(overlap_13) > 0) {
+  cat("Overlap between rows", 1, "and", 3, "occurs at values:", overlap_13, "\n")
+} else {
+  cat("There is no overlap between rows", 1, "and", 3, "\n")
+}
+
+
+overlap_13 <- intersect(row1_values, row3_values)
+
+if (length(overlap_23) > 0) {
+  cat("Overlap between rows", 2, "and", 3, "occurs at values:", overlap_23, "\n")
+} else {
+  cat("There is no overlap between rows", 2, "and", 3, "\n")
+}
