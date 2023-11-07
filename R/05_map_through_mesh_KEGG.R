@@ -6,15 +6,17 @@ library(org.Hs.eg.db)
 library(clusterProfiler)
 
 # Read data
-mesh <- XML::xmlToDataFrame("C:/Users/SaraAhsani-Nasab/OneDrive - Unit of Biostatistics Epidemiology and Public Health/PEA/MeSH/desc2023.xml")
-terms <- mesh$DescriptorName
-pubtator <- read.delim(("C:/Users/SaraAhsani-Nasab/OneDrive - Unit of Biostatistics Epidemiology and Public Health/PEA/Pubtator/gene2pubtatorcentral.gz"),
+mesh <- XML::xmlToDataFrame(here::here("data/MeSH/desc2023.xml"))
+diseases <- mesh |> filter(stringr::str_detect(TreeNumberList, stringr::regex("C", ignore_case = TRUE)))
+terms <- diseases$DescriptorName
+pubtator <- read.delim((here::here("data/Pubtator/gene2pubtatorcentral")),
                        quote = "", header = TRUE,
                        col.names = c('PMID', 'Object', 'Gene', 'Gene_name', 
                                      'Dataset'))
 
 # Seeds
-seeds <- c(5, 10, 169, 3011, 19811)
+# seeds <- c(5, 10, 169, 3011, 19811)
+seeds <- c(3011)
 
 
 # KEGG --------------------------------------------------------------------
@@ -66,7 +68,7 @@ query_to_pathwaysKEGG <- function(x) {
 # Function to execute pipeline for a given seed
 execute_pipelineKEGG <- function(seed) {
   set.seed(seed)
-  terms_2 <- sample(terms, size = 2, replace = FALSE)
+  terms_2 <- sample(terms, size = 5004, replace = FALSE)
   
   results <- map(terms_2, query_to_pathwaysKEGG, .progress = "progress")
   
@@ -101,29 +103,29 @@ save(final_results_dfKEGG, file = 'final_resutsKEGG.rda')
 
 # Overlaps ----------------------------------------------------------------
 
-## convert path$geneID to a numeric variable
-split_strings <- strsplit(path$geneID, "/")
-numeric_list <- lapply(split_strings, function(x) as.numeric(x))
-path$geneID <- sapply(numeric_list, function(x) x)
-
-## overlaps of genes among pathways (3 most significant/higher q-value)
-row1_values <- path$geneID[[1]]
-row2_values <- path$geneID[[2]]
-row3_values <- path$geneID[[3]]
-
-overlap_13 <- intersect(row1_values, row3_values)
-
-if (length(overlap_13) > 0) {
-  cat("Overlap between rows", 1, "and", 3, "occurs at values:", overlap_13, "\n")
-} else {
-  cat("There is no overlap between rows", 1, "and", 3, "\n")
-}
-
-
-overlap_23 <- intersect(row2_values, row3_values)
-
-if (length(overlap_23) > 0) {
-  cat("Overlap between rows", 2, "and", 3, "occurs at values:", overlap_23, "\n")
-} else {
-  cat("There is no overlap between rows", 2, "and", 3, "\n")
-}
+# ## convert path$geneID to a numeric variable
+# split_strings <- strsplit(path$geneID, "/")
+# numeric_list <- lapply(split_strings, function(x) as.numeric(x))
+# path$geneID <- sapply(numeric_list, function(x) x)
+# 
+# ## overlaps of genes among pathways (3 most significant/higher q-value)
+# row1_values <- path$geneID[[1]]
+# row2_values <- path$geneID[[2]]
+# row3_values <- path$geneID[[3]]
+# 
+# overlap_13 <- intersect(row1_values, row3_values)
+# 
+# if (length(overlap_13) > 0) {
+#   cat("Overlap between rows", 1, "and", 3, "occurs at values:", overlap_13, "\n")
+# } else {
+#   cat("There is no overlap between rows", 1, "and", 3, "\n")
+# }
+# 
+# 
+# overlap_23 <- intersect(row2_values, row3_values)
+# 
+# if (length(overlap_23) > 0) {
+#   cat("Overlap between rows", 2, "and", 3, "occurs at values:", overlap_23, "\n")
+# } else {
+#   cat("There is no overlap between rows", 2, "and", 3, "\n")
+# }

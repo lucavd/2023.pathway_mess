@@ -6,15 +6,17 @@ library(org.Hs.eg.db)
 library(clusterProfiler)
 
 # Read data
-mesh <- XML::xmlToDataFrame("C:/Users/SaraAhsani-Nasab/OneDrive - Unit of Biostatistics Epidemiology and Public Health/PEA/MeSH/desc2023.xml")
-terms <- mesh$DescriptorName
-pubtator <- read.delim(("C:/Users/SaraAhsani-Nasab/OneDrive - Unit of Biostatistics Epidemiology and Public Health/PEA/Pubtator/gene2pubtatorcentral.gz"),
+mesh <- XML::xmlToDataFrame(here::here("data/MeSH/desc2023.xml"))
+diseases <- mesh |> filter(stringr::str_detect(TreeNumberList, stringr::regex("C", ignore_case = TRUE)))
+terms <- diseases$DescriptorName
+pubtator <- read.delim((here::here("data/Pubtator/gene2pubtatorcentral")),
                        quote = "", header = TRUE,
                        col.names = c('PMID', 'Object', 'Gene', 'Gene_name', 
                                      'Dataset'))
 
 # Seeds
-seeds <- c(5, 10, 169, 3011, 19811)
+# seeds <- c(5, 10, 169, 3011, 19811)
+seeds <- c(3011)
 
 
 # Reactome ----------------------------------------------------------------
@@ -62,7 +64,7 @@ query_to_pathwaysREAC <- function(x) {
 # Function to execute pipeline for a given seed
 execute_pipelineREAC <- function(seed) {
   set.seed(seed)
-  terms_2 <- sample(terms, size = 2, replace = FALSE)
+  terms_2 <- sample(terms, size = 5004, replace = FALSE)
   
   results <- map(terms_2, query_to_pathwaysREAC, .progress = "progress")
   
