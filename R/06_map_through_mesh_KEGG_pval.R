@@ -19,10 +19,10 @@ pubtator <- read.delim((here::here("data/Pubtator/gene2pubtatorcentral")),
 seeds <- c(3011)
 
 
-# WP ----------------------------------------------------------------------
+# KEGG ----------------------------------------------------------------------
 
 # Function to query, get genes and pathways
-query_to_pathwaysWP <- function(x) {
+query_to_pathwaysKEGG <- function(x) {
   somma <- NA
   matched_pathways <- character(0)
   
@@ -37,17 +37,18 @@ query_to_pathwaysWP <- function(x) {
     annot_als <- pubtator[pubtator$PMID %in% common_als,]
     
     # Pathway analysis
-    WP_res <- enrichWP(gene = annot_als$Gene, organism = "Homo sapiens", 
-                       pAdjustMethod = "BH", 
-                       pvalueCutoff = 0.01, qvalueCutoff = 0.01,)
+    KEGG_res <- enrichKEGG(gene = annot_als$Gene, organism = "hsa",
+                           keyType = "kegg", #keyType can be also "ncbi-geneid"
+                           pvalueCutoff = 0.01, pAdjustMethod = "BH", qvalueCutoff = 0.01,
+                           use_internal_data = FALSE)
     
-    path <- dplyr::tibble('PathwayID' = WP_res@result[["ID"]],
-                          'Pathway' = WP_res@result[["Description"]],
-                          'q_value' = WP_res@result[["qvalue"]],
-                          'geneCOUNT' = WP_res@result[["Count"]],
-                          'genes'= WP_res@result[["geneID"]]) %>% 
+    path <- dplyr::tibble('PathwayID' = KEGG_res@result[["ID"]],
+                          'Pathway' = KEGG_res@result[["Description"]],
+                          'q_value' = KEGG_res@result[["qvalue"]],
+                          'geneCOUNT' = KEGG_res@result[["Count"]],
+                          'genes' = KEGG_res@result[["geneID"]]) %>% 
       dplyr::filter(q_value < 0.01) %>% 
-      rowid_to_column(var = "rowid") %>% 
+      rowid_to_column(var = "rowid") %>%  
       mutate(terms = paste0(x))
     
     path$coviddi <- stringr::str_detect(path$Pathway, 
@@ -62,18 +63,18 @@ query_to_pathwaysWP <- function(x) {
 }
 
 # Function to execute pipeline for a given seed
-execute_pipelineWP <- function(seed) {
+execute_pipelineKEGG <- function(seed) {
   set.seed(seed)
   terms_2 <- sample(terms, size = 5004, replace = FALSE)
   
-  results <- map(terms_2, query_to_pathwaysWP, .progress = "progress")
+  results <- map(terms_2, query_to_pathwaysKEGG, .progress = "progress")
   
   return(results)
 }
 
 # Execute pipeline for each seed and bind rows
-final_results_dfWP <- map_dfr(seeds, execute_pipelineWP, .progress = "progress")
+final_results_dfKEGG <- map_dfr(seeds, execute_pipelineKEGG, .progress = "progress")
 
-write.csv(final_results_dfWP, "final_results_dfWP_pval.csv")
+write.csv(final_results_dfKEGG, "final_results_dfKEGG_pval.csv")
 
-save(final_results_dfWP, file = 'final_resutsWP_pval.rda')
+save(final_results_dfKEGG, file = 'final_resutsKEGG_pval.rda')

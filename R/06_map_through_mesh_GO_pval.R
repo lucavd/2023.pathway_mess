@@ -19,10 +19,10 @@ pubtator <- read.delim((here::here("data/Pubtator/gene2pubtatorcentral")),
 seeds <- c(3011)
 
 
-# WP ----------------------------------------------------------------------
+# GO ----------------------------------------------------------------------
 
 # Function to query, get genes and pathways
-query_to_pathwaysWP <- function(x) {
+query_to_pathwaysGO <- function(x) {
   somma <- NA
   matched_pathways <- character(0)
   
@@ -37,15 +37,16 @@ query_to_pathwaysWP <- function(x) {
     annot_als <- pubtator[pubtator$PMID %in% common_als,]
     
     # Pathway analysis
-    WP_res <- enrichWP(gene = annot_als$Gene, organism = "Homo sapiens", 
-                       pAdjustMethod = "BH", 
-                       pvalueCutoff = 0.01, qvalueCutoff = 0.01,)
+    GO_res <- enrichGO(gene = annot_als$Gene, OrgDb = org.Hs.eg.db , 
+                       keyType = "ENTREZID", ont = "ALL", 
+                       pvalueCutoff = 0.01, pAdjustMethod = "BH", qvalueCutoff = 0.01,
+                       readable = TRUE, pool = TRUE)
     
-    path <- dplyr::tibble('PathwayID' = WP_res@result[["ID"]],
-                          'Pathway' = WP_res@result[["Description"]],
-                          'q_value' = WP_res@result[["qvalue"]],
-                          'geneCOUNT' = WP_res@result[["Count"]],
-                          'genes'= WP_res@result[["geneID"]]) %>% 
+    path <- dplyr::tibble('PathwayID' = GO_res@result[["ID"]],
+                          'Pathway' = GO_res@result[["Description"]],
+                          'q_value' = GO_res@result[["qvalue"]],
+                          'geneCOUNT' = GO_res@result[["Count"]],
+                          'genes'= GO_res@result[["geneID"]]) %>% 
       dplyr::filter(q_value < 0.01) %>% 
       rowid_to_column(var = "rowid") %>% 
       mutate(terms = paste0(x))
@@ -62,18 +63,18 @@ query_to_pathwaysWP <- function(x) {
 }
 
 # Function to execute pipeline for a given seed
-execute_pipelineWP <- function(seed) {
+execute_pipelineGO <- function(seed) {
   set.seed(seed)
   terms_2 <- sample(terms, size = 5004, replace = FALSE)
   
-  results <- map(terms_2, query_to_pathwaysWP, .progress = "progress")
+  results <- map(terms_2, query_to_pathwaysGO, .progress = "progress")
   
   return(results)
 }
 
 # Execute pipeline for each seed and bind rows
-final_results_dfWP <- map_dfr(seeds, execute_pipelineWP, .progress = "progress")
+final_results_dfGO <- map_dfr(seeds, execute_pipelineGO, .progress = "progress")
 
-write.csv(final_results_dfWP, "final_results_dfWP_pval.csv")
+write.csv(final_results_dfGO, "final_results_dfGO_pval.csv")
 
-save(final_results_dfWP, file = 'final_resutsWP_pval.rda')
+save(final_results_dfGO, file = 'final_resutsGO_pval.rda')

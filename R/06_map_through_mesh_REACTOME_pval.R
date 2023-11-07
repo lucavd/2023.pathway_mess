@@ -19,10 +19,10 @@ pubtator <- read.delim((here::here("data/Pubtator/gene2pubtatorcentral")),
 seeds <- c(3011)
 
 
-# WP ----------------------------------------------------------------------
+# Reactome ----------------------------------------------------------------------
 
 # Function to query, get genes and pathways
-query_to_pathwaysWP <- function(x) {
+query_to_pathwaysREAC <- function(x) {
   somma <- NA
   matched_pathways <- character(0)
   
@@ -37,17 +37,17 @@ query_to_pathwaysWP <- function(x) {
     annot_als <- pubtator[pubtator$PMID %in% common_als,]
     
     # Pathway analysis
-    WP_res <- enrichWP(gene = annot_als$Gene, organism = "Homo sapiens", 
-                       pAdjustMethod = "BH", 
-                       pvalueCutoff = 0.01, qvalueCutoff = 0.01,)
+    Reactome_res.ALS <- ReactomePA::enrichPathway(gene = annot_als$Gene, pvalueCutoff = 0.01,
+                                                  organism = "human", pAdjustMethod = "BH",
+                                                  qvalueCutoff = 0.01, readable = T)
     
-    path <- dplyr::tibble('PathwayID' = WP_res@result[["ID"]],
-                          'Pathway' = WP_res@result[["Description"]],
-                          'q_value' = WP_res@result[["qvalue"]],
-                          'geneCOUNT' = WP_res@result[["Count"]],
-                          'genes'= WP_res@result[["geneID"]]) %>% 
+    path <- dplyr::tibble('PathwayID' = Reactome_res.ALS@result[["ID"]],
+                          'Pathway' = Reactome_res.ALS@result[["Description"]],
+                          'q_value' = Reactome_res.ALS@result[["qvalue"]],
+                          'geneCOUNT' = Reactome_res.ALS@result[["Count"]],
+                          'genes' = Reactome_res.ALS@result[["geneID"]]) %>% 
       dplyr::filter(q_value < 0.01) %>% 
-      rowid_to_column(var = "rowid") %>% 
+      rowid_to_column(var = "rowid") %>%  
       mutate(terms = paste0(x))
     
     path$coviddi <- stringr::str_detect(path$Pathway, 
@@ -62,18 +62,18 @@ query_to_pathwaysWP <- function(x) {
 }
 
 # Function to execute pipeline for a given seed
-execute_pipelineWP <- function(seed) {
+execute_pipelineREAC <- function(seed) {
   set.seed(seed)
   terms_2 <- sample(terms, size = 5004, replace = FALSE)
   
-  results <- map(terms_2, query_to_pathwaysWP, .progress = "progress")
+  results <- map(terms_2, query_to_pathwaysREAC, .progress = "progress")
   
   return(results)
 }
 
 # Execute pipeline for each seed and bind rows
-final_results_dfWP <- map_dfr(seeds, execute_pipelineWP, .progress = "progress")
+final_results_dfREAC <- map_dfr(seeds, execute_pipelineREAC, .progress = "progress")
 
-write.csv(final_results_dfWP, "final_results_dfWP_pval.csv")
+write.csv(final_results_dfREAC, "final_results_dfREAC_pval.csv")
 
-save(final_results_dfWP, file = 'final_resutsWP_pval.rda')
+save(final_results_dfREAC, file = 'final_resutsREAC_pval.rda')
