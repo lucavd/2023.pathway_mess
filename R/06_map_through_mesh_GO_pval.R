@@ -23,8 +23,16 @@ seeds <- c(3011)
 
 # Function to query, get genes and pathways
 query_to_pathwaysGO <- function(x) {
-  somma <- NA
-  matched_pathways <- character(0)
+  # Initialize path as an empty tibble
+  path <- tibble(
+    PathwayID = character(),
+    Pathway = character(),
+    q_value = numeric(),
+    geneCOUNT = integer(),
+    genes = character(),
+    coviddi = logical(),
+    terms = character()
+  )
   
   tryCatch({
     # Query execution
@@ -37,30 +45,41 @@ query_to_pathwaysGO <- function(x) {
     annot_als <- pubtator[pubtator$PMID %in% common_als,]
     
     # Pathway analysis
-    GO_res <- enrichGO(gene = annot_als$Gene, OrgDb = org.Hs.eg.db , 
-                       keyType = "ENTREZID", ont = "ALL", 
-                       pvalueCutoff = 0.01, pAdjustMethod = "BH", qvalueCutoff = 0.01,
-                       readable = TRUE, pool = TRUE)
+    if (length(common_als) > 0) {
+      GO_res <- enrichGO(gene = annot_als$Gene, OrgDb = org.Hs.eg.db , 
+                         keyType = "ENTREZID", ont = "ALL", 
+                         pvalueCutoff = 0.01, pAdjustMethod = "BH", qvalueCutoff = 0.01,
+                         readable = TRUE, pool = TRUE)
+      
+      # Check if the results are non-empty before constructing the tibble
+      if (!is.null(GO_res) && !is.null(GO_res@result) && nrow(GO_res@result) > 0) {
+        path <- tibble(
+          PathwayID = GO_res@result[["ID"]],
+          Pathway = GO_res@result[["Description"]],
+          q_value = GO_res@result[["qvalue"]],
+          geneCOUNT = GO_res@result[["Count"]],
+          genes = GO_res@result[["geneID"]]
+        ) %>% 
+          filter(q_value < 0.01) %>% 
+          rowid_to_column(var = "rowid") %>% 
+          mutate(terms = x)
+        
+        path$coviddi <- str_detect(path$Pathway, 
+                                   regex("COVID|coronavirus|SARS-CoV-2|COVID-19", 
+                                         ignore_case = TRUE))
+      }
+    }
     
-    path <- dplyr::tibble('PathwayID' = GO_res@result[["ID"]],
-                          'Pathway' = GO_res@result[["Description"]],
-                          'q_value' = GO_res@result[["qvalue"]],
-                          'geneCOUNT' = GO_res@result[["Count"]],
-                          'genes'= GO_res@result[["geneID"]]) %>% 
-      dplyr::filter(q_value < 0.01) %>% 
-      rowid_to_column(var = "rowid") %>% 
-      mutate(terms = paste0(x))
-    
-    path$coviddi <- stringr::str_detect(path$Pathway, 
-                                        stringr::regex("COVID|coronavirus|SARS-CoV-2|COVID-19", 
-                                                       ignore_case = TRUE))
+    # Return the resulting path tibble (could be empty if no results or errors were encountered)
+    return(path)
     
   }, error = function(e) {
     warning(paste("An error occurred for the term", x, ": ", e))
+    # Return the pre-initialized empty `path` to ensure the return value is always a tibble
+    return(path)
   })
-  
-  return(path)
 }
+
 
 # Function to execute pipeline for a given seed
 execute_pipelineGO <- function(seed) {

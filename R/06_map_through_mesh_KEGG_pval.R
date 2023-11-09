@@ -23,8 +23,16 @@ seeds <- c(3011)
 
 # Function to query, get genes and pathways
 query_to_pathwaysKEGG <- function(x) {
-  somma <- NA
-  matched_pathways <- character(0)
+  # Initialize path as an empty tibble
+  path <- tibble(
+    PathwayID = character(),
+    Pathway = character(),
+    q_value = numeric(),
+    geneCOUNT = integer(),
+    genes = character(),
+    coviddi = logical(),
+    terms = character()
+  )
   
   tryCatch({
     # Query execution
@@ -37,30 +45,41 @@ query_to_pathwaysKEGG <- function(x) {
     annot_als <- pubtator[pubtator$PMID %in% common_als,]
     
     # Pathway analysis
-    KEGG_res <- enrichKEGG(gene = annot_als$Gene, organism = "hsa",
-                           keyType = "kegg", #keyType can be also "ncbi-geneid"
-                           pvalueCutoff = 0.01, pAdjustMethod = "BH", qvalueCutoff = 0.01,
-                           use_internal_data = FALSE)
+    if (length(common_als) > 0) {
+      KEGG_res <- enrichKEGG(gene = annot_als$Gene, organism = "hsa",
+                             keyType = "kegg", #keyType can be also "ncbi-geneid"
+                             pvalueCutoff = 0.01, pAdjustMethod = "BH", qvalueCutoff = 0.01,
+                             use_internal_data = FALSE)
+      
+      # Check if the results are non-empty before constructing the tibble
+      if (!is.null(KEGG_res) && !is.null(KEGG_res@result) && nrow(KEGG_res@result) > 0) {
+        path <- tibble(
+          PathwayID = KEGG_res@result[["ID"]],
+          Pathway = KEGG_res@result[["Description"]],
+          q_value = KEGG_res@result[["qvalue"]],
+          geneCOUNT = KEGG_res@result[["Count"]],
+          genes = KEGG_res@result[["geneID"]]
+        ) %>% 
+          filter(q_value < 0.01) %>% 
+          rowid_to_column(var = "rowid") %>%  
+          mutate(terms = x)
+        
+        path$coviddi <- str_detect(path$Pathway, 
+                                   regex("COVID|coronavirus|SARS-CoV-2|COVID-19", 
+                                         ignore_case = TRUE))
+      }
+    }
     
-    path <- dplyr::tibble('PathwayID' = KEGG_res@result[["ID"]],
-                          'Pathway' = KEGG_res@result[["Description"]],
-                          'q_value' = KEGG_res@result[["qvalue"]],
-                          'geneCOUNT' = KEGG_res@result[["Count"]],
-                          'genes' = KEGG_res@result[["geneID"]]) %>% 
-      dplyr::filter(q_value < 0.01) %>% 
-      rowid_to_column(var = "rowid") %>%  
-      mutate(terms = paste0(x))
-    
-    path$coviddi <- stringr::str_detect(path$Pathway, 
-                                        stringr::regex("COVID|coronavirus|SARS-CoV-2|COVID-19", 
-                                                       ignore_case = TRUE))
+    # Return the resulting path tibble (could be empty if no results or errors were encountered)
+    return(path)
     
   }, error = function(e) {
     warning(paste("An error occurred for the term", x, ": ", e))
+    # Return the pre-initialized empty `path` to ensure the return value is always a tibble
+    return(path)
   })
-  
-  return(path)
 }
+
 
 # Function to execute pipeline for a given seed
 execute_pipelineKEGG <- function(seed) {

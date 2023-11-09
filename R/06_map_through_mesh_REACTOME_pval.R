@@ -23,8 +23,16 @@ seeds <- c(3011)
 
 # Function to query, get genes and pathways
 query_to_pathwaysREAC <- function(x) {
-  somma <- NA
-  matched_pathways <- character(0)
+  # Initialize path as an empty tibble
+  path <- tibble(
+    PathwayID = character(),
+    Pathway = character(),
+    q_value = numeric(),
+    geneCOUNT = integer(),
+    genes = character(),
+    coviddi = logical(),
+    terms = character()
+  )
   
   tryCatch({
     # Query execution
@@ -37,29 +45,40 @@ query_to_pathwaysREAC <- function(x) {
     annot_als <- pubtator[pubtator$PMID %in% common_als,]
     
     # Pathway analysis
-    Reactome_res.ALS <- ReactomePA::enrichPathway(gene = annot_als$Gene, pvalueCutoff = 0.01,
-                                                  organism = "human", pAdjustMethod = "BH",
-                                                  qvalueCutoff = 0.01, readable = T)
+    if (length(common_als) > 0) {
+      Reactome_res.ALS <- ReactomePA::enrichPathway(gene = annot_als$Gene, pvalueCutoff = 0.01,
+                                                    organism = "human", pAdjustMethod = "BH",
+                                                    qvalueCutoff = 0.01, readable = TRUE)
+      
+      # Check if the results are non-empty before constructing the tibble
+      if (!is.null(Reactome_res.ALS) && !is.null(Reactome_res.ALS@result) && nrow(Reactome_res.ALS@result) > 0) {
+        path <- tibble(
+          PathwayID = Reactome_res.ALS@result[["ID"]],
+          Pathway = Reactome_res.ALS@result[["Description"]],
+          q_value = Reactome_res.ALS@result[["qvalue"]],
+          geneCOUNT = Reactome_res.ALS@result[["Count"]],
+          genes = Reactome_res.ALS@result[["geneID"]]
+        ) %>% 
+          filter(q_value < 0.01) %>% 
+          rowid_to_column(var = "rowid") %>%  
+          mutate(terms = x)
+        
+        path$coviddi <- str_detect(path$Pathway, 
+                                   regex("COVID|coronavirus|SARS-CoV-2|COVID-19", 
+                                         ignore_case = TRUE))
+      }
+    }
     
-    path <- dplyr::tibble('PathwayID' = Reactome_res.ALS@result[["ID"]],
-                          'Pathway' = Reactome_res.ALS@result[["Description"]],
-                          'q_value' = Reactome_res.ALS@result[["qvalue"]],
-                          'geneCOUNT' = Reactome_res.ALS@result[["Count"]],
-                          'genes' = Reactome_res.ALS@result[["geneID"]]) %>% 
-      dplyr::filter(q_value < 0.01) %>% 
-      rowid_to_column(var = "rowid") %>%  
-      mutate(terms = paste0(x))
-    
-    path$coviddi <- stringr::str_detect(path$Pathway, 
-                                        stringr::regex("COVID|coronavirus|SARS-CoV-2|COVID-19", 
-                                                       ignore_case = TRUE))
+    # Return the resulting path tibble (could be empty if no results or errors were encountered)
+    return(path)
     
   }, error = function(e) {
     warning(paste("An error occurred for the term", x, ": ", e))
+    # Return the pre-initialized empty `path` to ensure the return value is always a tibble
+    return(path)
   })
-  
-  return(path)
 }
+
 
 # Function to execute pipeline for a given seed
 execute_pipelineREAC <- function(seed) {
