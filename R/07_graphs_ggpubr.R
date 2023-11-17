@@ -251,7 +251,7 @@ q_value_barplot <- ggbarplot(summary_databases, x = "coviddi", y = "avg_q_value"
                              color = "white",
                              palette = "plos",
                              width = 0.4,
-                             position = position_dodge(0.5),
+                             position = position_dodge(.4),
                              format.scale = TRUE,
                              xlab = "\nPathways Related to COVID-19",
                              ylab ="-log2(Average q-value)\n",
@@ -259,15 +259,33 @@ q_value_barplot <- ggbarplot(summary_databases, x = "coviddi", y = "avg_q_value"
                              font.y = c(12, "bold", "black"),
                              x.text.angle = 90,
                              legend = "none",
-                             #add = "mean_se",
-                             #error.plot = "errorbar"
-)
-q_value_barplot <- q_value_barplot +
-  geom_errorbar(data = NULL,
-                aes(ymin = avg_q_value - se_q_value, ymax = avg_q_value + se_q_value),
-                width = 0.1,
-                stat = "identity",
-                position = position_dodge2(width = 0.1, padding = 0.1),
-                inherit.aes = TRUE)
+                             add = "mean_se",
+                             error.plot = "errorbar"
+) +
+  geom_errorbar(aes(ymin = avg_q_value - se_q_value, ymax = avg_q_value + se_q_value),
+                width = .2,
+                position = position_dodge(.4))
 
 print(q_value_barplot)
+
+
+ggplot(summary_databases, aes(x = coviddi, y= avg_q_value, fill = database)) +
+  geom_bar(stat = 'identity',
+           position = position_dodge(.9)) +
+  geom_errorbar(aes(ymin = avg_q_value - se_q_value, ymax = avg_q_value + se_q_value),
+                width = .2,
+                position = position_dodge(.9)) +
+  xlab('') +
+  ylab("-log2(Average q-value)\n") +
+  theme_classic()
+
+
+
+
+
+
+
+
+
+
+
