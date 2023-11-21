@@ -2,7 +2,7 @@ library(tidyverse)
 library(patchwork)
 
 #### to create the summary of all databases
-load('final_resutsREAC_pval.rda')
+load('R/final_resutsREAC_pval.rda')
 dfREAC <- final_results_dfREAC
 
 summary_dfREAC <- dfREAC %>%
@@ -17,7 +17,7 @@ summary_dfREAC$coviddi <-  as.factor(summary_dfREAC$coviddi)
 summary_dfREAC$database <- as.factor(c("Reactome", "Reactome"))
 
 
-load('final_resutsKEGG_pval.rda')
+load('R/final_resutsKEGG_pval.rda')
 dfKEGG <- final_results_dfKEGG
 
 summary_dfKEGG <- dfKEGG %>%
@@ -32,7 +32,7 @@ summary_dfKEGG$coviddi <-  as.factor(summary_dfKEGG$coviddi)
 summary_dfKEGG$database <- as.factor(c("KEGG", "KEGG"))
 
 
-load('final_resutsWP_pval.rda')
+load('R/final_resutsWP_pval.rda')
 dfWP <- final_results_dfWP
 
 summary_dfWP <- dfWP %>%
@@ -107,11 +107,10 @@ ggsave("gene_count_barplot.png", gene_count_barplot, width = 6, height = 6, dpi 
 ## combined plot
 grouped_plot <- q_value_barplot + gene_count_barplot +
   plot_layout(guides = "collect") +
-  theme(plot.margin = unit(c(1, 0, 0, 1), "cm")) #+ 
-#labs(x ="\nPathways Related to COVID-19") +
-#theme(
-#axis.title.x = element_text(size = 14, face = "bold", hjust = 0)
-#)
+  theme(plot.margin = unit(c(1, 0, 0, 1), "cm"))+
+labs(x ="\nPathways Related to COVID-19") +
+theme(
+axis.title.x = element_text(size = 14, face = "bold", hjust = 3))
 
 print(grouped_plot)
 ggsave("grouped_barplot.png", grouped_plot, width = 10, height = 5, dpi = 600)
